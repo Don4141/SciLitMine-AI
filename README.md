@@ -498,8 +498,6 @@ The project should currently be considered a research and engineering prototype 
 
 ---
 
-# What This Project Demonstrates
-
 SciLitMine-AI explores practical LLM engineering concepts including **model orchestration, retrieval-grounded LLM workflows, semantic classification, structured model outputs, API integration, scientific web-content extraction, deterministic + probabilistic system design, validation, and fault-tolerant workflow orchestration**.
 
 At its core, the project explores a broader engineering question:
