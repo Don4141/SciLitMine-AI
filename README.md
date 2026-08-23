@@ -2,6 +2,13 @@
 
 ### LLM-Assisted Scientific Literature Discovery and Information Extraction
 
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![Gradio](https://img.shields.io/badge/Interface-Gradio-orange)
+![Crossref](https://img.shields.io/badge/Scholarly%20Metadata-Crossref-blue)
+![LLM](https://img.shields.io/badge/LLM-Semantic%20Reasoning-purple)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+![Status](https://img.shields.io/badge/Status-Active%20Development-yellow)
+
 **SciLitMine-AI** is a Python-based scientific information retrieval system that combines scholarly metadata APIs, deterministic data processing, web content extraction, and large language models (LLMs) to automate the discovery, classification, retrieval, and structured extraction of information from scientific literature.
 
 The pipeline starts with a research question and progressively transforms it into a structured collection of relevant scientific publications and extracted research findings.
