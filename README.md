@@ -396,7 +396,7 @@ This allows both successful results and failures to remain visible to the user.
   <img
     src="assets/scilitmine-gradio-interface.png"
     alt="SciLitMine-AI Gradio Interface"
-    width="900"
+    width="500"
   >
 </p>
 
