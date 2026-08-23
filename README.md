@@ -380,6 +380,14 @@ Users can configure:
 - maximum number of candidates sent for LLM classification,
 - semantic relevance threshold.
 
+<p align="center">
+  <img
+    src="assets/scilitmine-gradio-interface.png"
+    alt="SciLitMine-AI Gradio Interface"
+    width="500"
+  >
+</p>
+
 ### Results
 
 The interface provides views for:
@@ -398,14 +406,6 @@ This allows both successful results and failures to remain visible to the user.
 ![SciLitMine-AI Gradio Interface](assets/scilitmine-gradio-interface.png)
 
 -->
-
-<p align="center">
-  <img
-    src="assets/scilitmine-gradio-interface.png"
-    alt="SciLitMine-AI Gradio Interface"
-    width="500"
-  >
-</p>
 
 ---
 
