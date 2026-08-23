@@ -392,6 +392,14 @@ This allows both successful results and failures to remain visible to the user.
 
 -->
 
+<p align="center">
+  <img
+    src="assets/scilitmine-gradio-interface.png"
+    alt="SciLitMine-AI Gradio Interface"
+    width="900"
+  >
+</p>
+
 ---
 
 ## Example Research Question
