@@ -56,35 +56,25 @@ flowchart TD
 
 The workflow begins with a user-defined scientific research topic:
 
-For example:
-
 ```text
 Long-read sequencing for structural variant analysis in breast cancer
 ```
 
-Rather than relying on a single search string, an LLM expands the research topic into multiple focused literature-search queries.
+An LLM expands the research topic into multiple focused literature-search queries.This helps improve search coverage because related publications may describe similar scientific concepts using different terminology, technologies, disease contexts, or analytical approaches.
 
-This helps improve search coverage because related publications may describe similar scientific concepts using different terminology, technologies, disease contexts, or analytical approaches.
-
-Importantly, the LLM generates the **search strategy**. It does **not** generate the publications themselves.
+Importantly, the LLM generates the **search strategy** and **not** the publications themselves.
 
 ---
 
 ### 2. Scholarly Publication Discovery
 
-The generated queries are submitted programmatically to the **Crossref API**.
+The generated queries are submitted programmatically to the **Crossref API** to retrieve real scholarly publications and available metadata including:
 
-Crossref provides structured scholarly metadata that may include:
-
-- article title,
-- authors,
-- DOI,
-- journal,
+- article title and authors,
+- DOI and article URL,
+- journal and publisher,
 - publication date,
-- publisher,
-- article type,
 - abstract when available,
-- article URL.
 
 This keeps publication discovery grounded in an external scholarly metadata source rather than relying on LLM-generated citations.
 
@@ -92,11 +82,7 @@ This keeps publication discovery grounded in an external scholarly metadata sour
 
 ### 3. DOI Normalization and Deduplication
 
-Different search queries can retrieve the same publication.
-
-Before publications are sent to downstream LLM processing, SciLitMine-AI normalizes identifiers and removes duplicate records.
-
-The DOI is used as the primary identifier when available.
+Because multiple search queries can return the same publication, SciLitMine-AI normalizes DOIs and removes duplicate before records are sent to downstream LLM processing.
 
 For example:
 
@@ -106,13 +92,13 @@ doi:10.xxxx/example
 10.xxxx/example
 ```
 
-are normalized into a consistent DOI representation:
+become:
 
 ```text
 10.xxxx/example
 ```
 
-When a DOI is unavailable, a normalized article title can be used as a fallback identifier for duplicate detection.
+DOI is used as the primary identifier. When a DOI is unavailable, a normalized article title can be used as a fallback identifier for duplicate detection.
 
 This prevents the same publication from being classified and processed multiple times unnecessarily.
 
@@ -120,11 +106,7 @@ This prevents the same publication from being classified and processed multiple 
 
 ### 4. Semantic Relevance Classification
 
-Not every publication returned by a keyword-based search is scientifically relevant to the research question.
-
-A publication may contain terms from the research topic while investigating a substantially different biological question, disease, sequencing application, or analytical problem.
-
-SciLitMine-AI therefore uses an LLM to evaluate candidate publications using available metadata, particularly the title and abstract.
+An LLM evaluates each candidate using available publication metadata, particularly the title and abstract, to determine its relevance to the research topic.
 
 The classifier returns structured information such as:
 
@@ -140,7 +122,7 @@ The classifier returns structured information such as:
 }
 ```
 
-A configurable relevance threshold determines which publications proceed to the retrieval and extraction stages.
+A configurable relevance threshold determines which publications proceed to the article retrieval and information extraction stages. This reduces unnecessary HTTP requests and LLM calls.
 
 For example:
 
@@ -152,45 +134,11 @@ Publications below the threshold are retained as rejected publications rather th
 
 ---
 
-## Why Filter Before Extraction?
-
-One of the architectural principles of the project is:
-
-> **Do not perform expensive downstream processing on publications that are unlikely to answer the research question.**
-
-Instead of retrieving and processing every candidate publication, the pipeline progressively reduces the search space:
-
-```text
-Raw Candidates
-      ↓
-Unique Candidates
-      ↓
-Semantically Classified Candidates
-      ↓
-Relevant Publications
-      ↓
-Article Retrieval
-      ↓
-Scientific Extraction
-```
-
-Filtering before publisher retrieval also reduces unnecessary HTTP requests and downstream LLM calls.
-
----
-
 ## Publisher Retrieval and Web Content Processing
 
-For publications classified as relevant, the pipeline resolves the DOI and attempts to retrieve the corresponding publisher webpage.
+For publications classified as relevant, **SciLitMine-AI** resolves the DOI and attempts to retrieve the corresponding publisher webpage using `requests` and `BeautifulSoup`.
 
-The retrieval layer uses:
-
-- `requests`
-- `BeautifulSoup`
-- HTML metadata
-- citation meta tags
-- JSON-LD
-
-Common webpage boilerplate such as scripts, styles, navigation elements, forms, headers, and footers is removed before downstream scientific extraction.
+The pipeline extracts available HTML metadata, citation meta tags, JSON-LD, and article text while removing common webpage boilerplate before downstream scientific extraction.
 
 The goal is to provide the extraction model with the most relevant accessible scientific content while minimizing unrelated webpage text.
 
@@ -200,110 +148,49 @@ SciLitMine-AI respects publisher access restrictions and does **not** attempt to
 
 ## 6. Deterministic Extraction + Evidence-Grounded LLM Extraction
 
-A central design principle of **SciLitMine-AI** is to separate information that can be extracted deterministically from information that requires semantic interpretation.
+A central design principle of **SciLitMine-AI** is to separate information that can reliably extracted from information that requires semantic interpretation.
 
-### Deterministic extraction
+**Deterministic extraction** handles bibliographic information such as DOI, title, authors, journal, publication date, publisher, URL, and available abstract using Crossref and webpage metadata.
 
-Python, Crossref metadata, HTML citation tags, and JSON-LD are used for bibliographic fields such as:
+**LLM-based extraction** is reserved for scientific interpretation, including:
 
-- DOI
-- title
-- authors
-- journal
-- publication date
-- publisher
-- canonical URL
-- available abstract
+- study objectives
+- methods
+- major findings
+- limitations
+- data repositories or accession information
 
-These fields should not depend unnecessarily on generative model output.
-
-### LLM-based extraction
-
-The LLM is reserved for information requiring semantic interpretation, such as:
-
-- study objective,
-- experimental or computational methods,
-- major findings,
-- study limitations,
-- data repositories or accession information when supported by the retrieved content.
-
-The extraction model is instructed to use the supplied publication content rather than filling missing information with outside knowledge.
+The LLM is instructed to use only the supplied publication content rather than filling missing information with outside knowledge.
 
 If information cannot be supported by the available evidence, the pipeline is designed to preserve that uncertainty rather than invent a value.
 
-After LLM extraction, important bibliographic fields are reconciled with deterministic metadata so that the model does not become the source of truth for publication identity.
-
-This creates a clearer boundary between:
-
-> **Retrieved facts** and **model-derived scientific interpretation**
+> **Retrieved metadata remains authoritative; the LLM handles scientific interpretation.**
 
 ---
 
-## 7. Access-Level Awareness
-
-Not every publisher page exposes the same amount of scientific content.
-
-The pipeline evaluates the content available for downstream extraction and can distinguish among states such as:
-
-```text
-full_text
-abstract_only
-metadata_and_page_text
-metadata_only
-```
-
-This distinction is important because the amount of accessible evidence affects what the extraction model can reasonably determine.
-
-For example, a publication for which only bibliographic metadata is available should not be treated as though its complete methods and results were successfully retrieved.
-
-Publisher access failures, including blocked requests, are captured separately through the pipeline's failure-handling mechanism.
+Available content is categorized as `full_text`, `abstract_only`, `metadata_and_page_text`, or `metadata_only`, allowing extraction to reflect the evidence actually available for each publication.
 
 ---
 
-## 8. Failure-Tolerant Processing
+## 7. Failure-Tolerant Processing
 
-Scientific web retrieval is inherently inconsistent.
+Publisher retrieval and LLM processing can fail because of blocked requests, timeouts, inaccessible content, unexpected HTML, or malformed model responses.
 
-A publisher may:
+SciLitMine-AI isolates failures at the publication level so that one failed article does not terminate the entire pipeline.
 
-- return `403 Forbidden`,
-- reject automated requests,
-- redirect DOI requests,
-- expose only limited content (metadata or an abstract),
-- return unexpected HTML,
-- time out,
-- provide content that cannot be parsed reliably.
+Failed records retain the publication title, DOI, URL, and error information for troubleshooting, while processing continues with the remaining publications.
 
-LLM calls may also fail, return malformed structured output, or produce an empty response.
+Failures are tracked across:
 
-SciLitMine-AI is designed so that a failure affecting one publication does not necessarily terminate the entire pipeline.
-
-Instead, the publication-level error is captured with information such as:
-
-```json
-{
-  "title": "Example publication",
-  "doi": "10.xxxx/example",
-  "article_url": "https://doi.org/10.xxxx/example",
-  "error": "403 Client Error: Forbidden"
-}
-```
-
-and processing continues with the remaining publications.
-
-Failures are tracked separately for:
-
-- search queries,
-- relevance classification,
-- article retrieval/extraction.
-
-This makes failed records visible instead of silently dropping them.
+- search queries
+- relevance classification
+- article retrieval/extraction
 
 ---
 
 ## Structured Pipeline Output
 
-Each run produces a structured summary describing how publications moved through the workflow.
+Each run produces structured JSON containing pipeline metadata, search strategy, processed publications, rejected publications, failures, and summary statistics.
 
 For example:
 
@@ -321,26 +208,11 @@ For example:
 }
 ```
 
-> The values above are illustrative. Actual results depend on the research topic, search configuration, publication metadata, publisher accessibility, and model responses.
-
-The final pipeline result can contain:
-
-- pipeline metadata
-- generated search strategy
-- summary statistics
-- successfully processed publications
-- rejected publications
-- failed search queries
-- failed relevance classifications
-- failed article extractions
-
-Results are persisted as structured JSON for downstream analysis or reuse.
-
 ---
 
 # Gradio Web Interface
 
-SciLitMine-AI includes a **Gradio web interface** that allows users to run and configure the literature mining workflow without modifying the underlying Python code.
+SciLitMine-AI includes a **Gradio web interface** to configure searches, run the pipeline, retrieve relevant publications and failures, and download structured results.
 
 ### Search Configuration
 
@@ -380,35 +252,7 @@ The interface provides views for:
 
 This allows both successful results and failures to remain visible to the user.
 
-<!-- Add a screenshot when available:
-
-![SciLitMine-AI Gradio Interface](assets/scilitmine-gradio-interface.png)
-
--->
-
 ---
-
-## Example Research Question
-
-One research topic used during development is:
-
-```text
-Long-read sequencing for structural variant analysis in breast cancer
-```
-
-The query generation stage produce search strategies covering concepts such as:
-
-```text
-long-read sequencing structural variants breast cancer
-
-PacBio structural variant detection breast cancer
-
-Oxford Nanopore structural variation breast cancer
-
-long-read genomic sequencing breast cancer rearrangements
-```
-
-The queries are illustrative. Actual search queries are generated dynamically and may vary between runs.
 
 ---
 
@@ -428,40 +272,18 @@ The queries are illustrative. Actual search queries are generated dynamically an
 
 ---
 
-# Design Principles
-
-SciLitMine-AI is built around three primary engineering principles:
-
-### Ground discovery in real scholarly sources
-
-LLMs generate search strategies, while publication discovery is performed against external scholarly metadata.
-
-### Use deterministic methods whenever possible
-
-Publication identifiers, metadata, normalization, validation, and persistence should not depend unnecessarily on generative models.
-
-### Reserve LLMs for semantic reasoning
-
-LLMs are used where interpretation adds value, particularly search-query generation, relevance classification, and scientific information extraction.
-
-The pipeline also preserves failures and partial-information states rather than silently discarding them.
-
 ---
 
-# Current Limitations
+## Current Limitations
 
-SciLitMine-AI is under active development and currently has several limitations:
+SciLitMine-AI is under active development. Current limitations include:
 
-- Publisher websites may block automated retrieval.
-- Full text is not available for every publication.
-- HTML structure varies substantially among publishers.
-- Semantic relevance classification depends on the quality and completeness of available metadata.
-- LLM outputs remain probabilistic and require validation.
-- Publisher-access restrictions can limit the evidence available for scientific extraction.
-- Retrieval and LLM extraction failures are not yet fully separated into independent failure categories.
+- Publisher access restrictions may limit full-text retrieval.
+- Publisher HTML structures vary and may affect content extraction.
+- LLM classification and extraction remain probabilistic and require validation.
 - Relevance classification and extraction quality have not yet been systematically benchmarked against a manually curated reference dataset.
 
-The pipeline does **not** attempt to bypass publisher authentication, paywalls, or access restrictions.
+The pipeline does **not** bypass publisher authentication, paywalls, or access restrictions.
 
 ---
 
@@ -471,32 +293,10 @@ Planned improvements include:
 
 - [ ] Add resilient metadata-only fallback for publisher-blocked publications
 - [ ] Integrate additional scholarly sources such as PubMed and Europe PMC
-- [ ] Distinguish retrieval, parsing, and LLM extraction failures
-- [ ] Add retry/backoff strategies and search-result caching
+- [ ] Separate retrieval, parsing, and LLM extraction failures with retry/caching support
 - [ ] Build a human-reviewed evaluation set for relevance classification and scientific extraction
-- [ ] Add automated tests, CI/CD, and containerized deployment
 
 ---
-
-# Project Status
-
-> **Active Development / Research Prototype**
-
-SciLitMine-AI is functional and is being actively improved with an emphasis on retrieval reliability, evaluation, model orchestration, and evidence-grounded scientific information extraction.
-
-The project should currently be considered a research and engineering prototype rather than a replacement for systematic-review platforms or expert scientific review.
-
----
-
-# What This Project Demonstrates
-
----
-
-SciLitMine-AI explores practical LLM engineering concepts including **model orchestration, retrieval-grounded LLM workflows, semantic classification, structured model outputs, API integration, scientific web-content extraction, deterministic + probabilistic system design, validation, and fault-tolerant workflow orchestration**.
-
-At its core, the project explores a broader engineering question:
-
-> **Where should an LLM be used in a scientific workflow and where should deterministic software remain in control?**
 
 ---
 
