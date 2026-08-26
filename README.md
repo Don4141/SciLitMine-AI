@@ -9,45 +9,24 @@
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-yellow)
 
-**SciLitMine-AI** is a Python-based scientific information retrieval system that combines scholarly metadata APIs, deterministic data processing, web content extraction, and large language models (LLMs) to automate the discovery, classification, retrieval, and structured extraction of information from scientific literature.
+**SciLitMine-AI** is a Python-based scientific literature mining system that combines scholarly metadata APIs, deterministic data processing, web content extraction, and large language models (LLMs) to automate the discovery, classification, retrieval, and structured extraction of information from scientific literature.
 
-The pipeline starts with a research question and progressively transforms it into a structured collection of relevant scientific publications and extracted research findings.
-
-The system deliberately separates **deterministic processing from LLM reasoning**. Thus, rather than relying on an LLM for every task, the system follows a **hybrid deterministic + LLM architecture**:
+The system uses a **hybrid deterministic + LLM architecture**:
 
 - **Python and scholarly APIs** handle publication discovery, normalization, deduplication, metadata extraction, validation, and persistence.
 - **LLMs** are used selectively for tasks that benefit from semantic reasoning, including query expansion, relevance classification, and scientific information extraction.
 
-A **Gradio web interface** provides an accessible way to configure searches, run the pipeline, inspect results, review failures, and download structured outputs.
+A **Gradio web interface** allows users to configure searches, run the pipeline, inspect failures and results, and download structured outputs.
 
 ---
 
 ## Why SciLitMine-AI?
-Scientific literature searches can return many publications containing the right keywords without necessarily answering the underlying research question.
 
-Traditional keyword matching can identify papers containing similar terminology, but keyword overlap does not necessarily mean that a publication is scientifically relevant.
+Literature searches often return many publications that match the right keywords but are not necessarily relevant to the research question. Researchers must manually review those publications to identify the most useful studies and extract key information.
 
-Even after relevant publications are identified, researchers still need to manually:
+SciLitMine-AI was built to reduce that manual effort by automating literature discovery, relevant screening, and structured information extraction.
 
-- review titles and abstracts,
-- remove duplicate publications,
-- open publisher pages,
-- identify study objectives,
-- understand experimental approaches,
-- extract major findings,
-- identify technologies and analytical methods,
-- review study limitations,
-- locate associated datasets and repositories.
-
-SciLitMine-AI explores how these tasks can be partially automated while keeping the workflow:
-
-- **Grounded** in real scholarly publications
-- **Structured** through machine-readable outputs
-- **Traceable** across pipeline stages
-- **Fault tolerant** when individual publications fail
-- **Selective** about where LLM reasoning is used
-
-The goal is not to replace expert scientific review, but to reduce the manual effort required to move from a research question to an organized set of potentially relevant publications and extracted scientific information.
+The goal is not to replace expert scientific review, but to help researchers move more efficiently from a research question to an organized set of relevant publications and extracted findings.
 
 ---
 
