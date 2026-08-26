@@ -134,7 +134,7 @@ Publications below the threshold are retained as rejected publications rather th
 
 ---
 
-## Publisher Retrieval and Web Content Processing
+### 5. Publisher Retrieval and Web Content Processing
 
 For publications classified as relevant, **SciLitMine-AI** resolves the DOI and attempts to retrieve the corresponding publisher webpage using `requests` and `BeautifulSoup`.
 
@@ -146,9 +146,11 @@ SciLitMine-AI respects publisher access restrictions and does **not** attempt to
 
 ---
 
-## 6. Deterministic Extraction + Evidence-Grounded LLM Extraction
+### 6. Deterministic Extraction + Evidence-Grounded LLM Extraction
 
-A central design principle of **SciLitMine-AI** is to separate information that can reliably extracted from information that requires semantic interpretation.
+**Where should an LLM be used in a scientific workflow and where should deterministic software remain in control?**
+
+A central design principle of **SciLitMine-AI** is to separate information that can be reliably extracted from information that requires semantic interpretation.
 
 **Deterministic extraction** handles bibliographic information such as DOI, title, authors, journal, publication date, publisher, URL, and available abstract using Crossref and webpage metadata.
 
@@ -172,7 +174,7 @@ Available content is categorized as `full_text`, `abstract_only`, `metadata_and_
 
 ---
 
-## 7. Failure-Tolerant Processing
+### 7. Failure-Tolerant Processing
 
 Publisher retrieval and LLM processing can fail because of blocked requests, timeouts, inaccessible content, unexpected HTML, or malformed model responses.
 
@@ -210,7 +212,7 @@ For example:
 
 ---
 
-# Gradio Web Interface
+## Gradio Web Interface
 
 SciLitMine-AI includes a **Gradio web interface** to configure searches, run the pipeline, retrieve relevant publications and failures, and download structured results.
 
@@ -254,7 +256,7 @@ This allows both successful results and failures to remain visible to the user.
 
 ---
 
-# Technology Stack
+## Technology Stack
 
 | Area | Technologies |
 |---|---|
@@ -283,7 +285,7 @@ The pipeline does **not** bypass publisher authentication, paywalls, or access r
 
 ---
 
-# Roadmap
+## Roadmap
 
 Planned improvements include:
 
