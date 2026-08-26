@@ -254,8 +254,6 @@ This allows both successful results and failures to remain visible to the user.
 
 ---
 
----
-
 # Technology Stack
 
 | Area | Technologies |
@@ -269,8 +267,6 @@ This allows both successful results and failures to remain visible to the user.
 | Data Processing | Pandas |
 | Structured Output | JSON|
 | User Interface | Gradio |
-
----
 
 ---
 
@@ -295,8 +291,6 @@ Planned improvements include:
 - [ ] Integrate additional scholarly sources such as PubMed and Europe PMC
 - [ ] Separate retrieval, parsing, and LLM extraction failures with retry/caching support
 - [ ] Build a human-reviewed evaluation set for relevance classification and scientific extraction
-
----
 
 ---
 
